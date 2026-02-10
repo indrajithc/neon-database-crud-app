@@ -3,17 +3,28 @@ import { sql } from "./db";
 
 export async function handleApi(req: Request) {
 	const url = new URL(req.url);
-	const id = url.pathname.split("/")[2];
+	const segments = url.pathname.split("/").filter(Boolean);
+	// ["api","items","3"]
+
+	const id = segments[2] ? Number(segments[2]) : null;
 
 	try {
+		// -------------------------
 		// LIST
-		if (req.method === "GET" && url.pathname === "/api/items") {
-			const rows = await sql`SELECT * FROM playing_with_neon ORDER BY id`;
+		// GET /api/items
+		// -------------------------
+		if (req.method === "GET" && segments.length === 2) {
+			const rows = await sql`
+        SELECT * FROM playing_with_neon ORDER BY id
+      `;
 			return Response.json(rows);
 		}
 
+		// -------------------------
 		// CREATE
-		if (req.method === "POST" && url.pathname === "/api/items") {
+		// POST /api/items
+		// -------------------------
+		if (req.method === "POST" && segments.length === 2) {
 			const body = await req.json();
 
 			const [row] = await sql`
@@ -25,8 +36,11 @@ export async function handleApi(req: Request) {
 			return Response.json(row);
 		}
 
+		// -------------------------
 		// UPDATE
-		if (req.method === "PUT" && id) {
+		// PUT /api/items/:id
+		// -------------------------
+		if (req.method === "PUT" && id !== null) {
 			const body = await req.json();
 
 			const [row] = await sql`
@@ -39,9 +53,16 @@ export async function handleApi(req: Request) {
 			return Response.json(row);
 		}
 
+		// -------------------------
 		// DELETE
-		if (req.method === "DELETE" && id) {
-			await sql`DELETE FROM playing_with_neon WHERE id=${id}`;
+		// DELETE /api/items/:id
+		// -------------------------
+		if (req.method === "DELETE" && id !== null) {
+			await sql`
+        DELETE FROM playing_with_neon
+        WHERE id=${id}
+      `;
+
 			return new Response(null, { status: 204 });
 		}
 
