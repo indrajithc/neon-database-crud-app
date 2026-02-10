@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<title>Neon CRUD Test</title>
+	<style>
+		body {
+			font-family: system-ui;
+			max-width: 700px;
+			margin: 40px auto;
+		}
+
+		input {
+			margin: 4px;
+		}
+
+		table {
+			border-collapse: collapse;
+			width: 100%;
+			margin-top: 16px;
+		}
+
+		td,
+		th {
+			border: 1px solid #ddd;
+			padding: 6px;
+		}
+	</style>
+</head>
+
+<body>
+
+	<h2>Neon CRUD Test</h2>
+
+	<input id="name" name="name" placeholder="name" />
+	<input id="value" type="number" placeholder="value" />
+	<button onclick="create()">Create</button>
+
+	<table id="table">
+		<thead>
+			<tr>
+				<th>ID</th>
+				<th>Name</th>
+				<th>Value</th>
+				<th>Actions</th>
+			</tr>
+		</thead>
+		<tbody></tbody>
+	</table>
+
+	<script>
+
+
+		const name = document.getElementById("name");
+		const value = document.getElementById("value");
+
+		async function load() {
+			const res = await fetch("/api/items");
+			const data = await res.json();
+
+			const tbody = document.querySelector("tbody");
+			tbody.innerHTML = "";
+
+			data.forEach(row => {
+				const tr = document.createElement("tr");
+
+				tr.innerHTML = `
+      <td>${row.id}</td>
+      <td><input value="${row.name}" /></td>
+      <td><input value="${row.value}" type="number"/></td>
+      <td>
+        <button onclick="update(${row.id}, this)">Update</button>
+        <button onclick="removeItem(${row.id})">Delete</button>
+      </td>
+    `;
+
+				tbody.appendChild(tr);
+			});
+		}
+
+		async function create() {
+			await fetch("/api/items", {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify({
+					name: name.value,
+					value: Number(value.value)
+				})
+			});
+
+			load();
+		}
+
+		async function update(id, btn) {
+			const tr = btn.closest("tr");
+			const inputs = tr.querySelectorAll("input");
+
+			await fetch(`/api/items/${id}`, {
+				method: "PUT",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify({
+					name: inputs[0].value,
+					value: Number(inputs[1].value)
+				})
+			});
+
+			load();
+		}
+
+		async function removeItem(id) {
+			await fetch(`/api/items/${id}`, { method: "DELETE" });
+			load();
+		}
+
+		load();
+	</script>
+
+</body>
+
+</html>
